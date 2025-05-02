@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
 
 
-@SpringBootApplication
+@SpringBootApplication // спринг приложение
 open class Main
 
 public fun main(args: Array<String>) {

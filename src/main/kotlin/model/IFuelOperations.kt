@@ -1,5 +1,5 @@
 package org.example.model
 
 interface IFuelOperations {
-    fun refuel(amount: Double)
+    fun refuel(amount: Double) // заправка
 }

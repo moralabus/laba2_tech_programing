@@ -1,21 +1,25 @@
 package org.example.view
 
+//Файл с кнопками всякими
 import org.example.model.Aircraft
 import org.example.presenter.AirlinePresenter
-import org.example.service.AirlineService
+import org.example.presenter.AirlinePresenterImpl
+import org.example.presenter.proxy.AirlinePresenterProxy
+import org.example.repo.AircraftRepository
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
-import javax.swing.*
+import javax.swing.* // графический интерфейс
 
 @Component
 class AirlineView(
-    private val airlineService: AirlineService
+    private val repository: AircraftRepository
 ) : JFrame() {
-    private val presenter = AirlinePresenter(this, airlineService)
+    private val presenter: AirlinePresenter = AirlinePresenterProxy(this, AirlinePresenterImpl(repository, this))
     private val aircraftList = DefaultListModel<String>()
     private val list = JList(aircraftList)
 
     init {
-        airlineService.findAll().forEach {
+        presenter.showFleet().forEach {
             aircraftList.addElement(it.model)
         }
 
@@ -93,26 +97,29 @@ class AirlineView(
             dateField.text = ""
 
             val aircraftType = if (isCargo) "грузовой" else "пассажирский"
-            JOptionPane.showMessageDialog(this, "$model добавлен как $aircraftType самолет.", "Добавление", JOptionPane.INFORMATION_MESSAGE)
+            JOptionPane.showMessageDialog(
+                this,
+                "$model добавлен как $aircraftType самолет.",
+                "Добавление",
+                JOptionPane.INFORMATION_MESSAGE
+            )
         }
         add(addButton)
 
         val sortButton = JButton("Сортировать по дальности")
         sortButton.setBounds(220, 220, 200, 30)
         sortButton.addActionListener {
-            val sorted = presenter.sortFleetByRange()
-            aircraftList.clear()
-            sorted.forEach { aircraftList.addElement(it.model) }
+            presenter.sortFleetByRange()
         }
         add(sortButton)
 
         val filterButton = JButton("Фильтр по расходу топлива")
         filterButton.setBounds(20, 260, 200, 30)
         filterButton.addActionListener {
-            val fuelMax = JOptionPane.showInputDialog(this, "Введите макс. расход топлива:").toDoubleOrNull() ?: return@addActionListener
-            val filtered = presenter.filterByFuel(fuelMax)
-            aircraftList.clear()
-            filtered.forEach { aircraftList.addElement(it.model) }
+            val fuelMax = JOptionPane.showInputDialog(this, "Введите макс. расход топлива:").toDoubleOrNull()
+                ?: return@addActionListener
+            presenter.filterByFuel(fuelMax)
+
         }
         add(filterButton)
 
@@ -120,7 +127,8 @@ class AirlineView(
         refuelButton.setBounds(240, 260, 180, 30)
         refuelButton.addActionListener {
             val selected = list.selectedValue ?: return@addActionListener
-            val amount = JOptionPane.showInputDialog(this, "Сколько литров заправить?").toDoubleOrNull() ?: return@addActionListener
+            val amount = JOptionPane.showInputDialog(this, "Сколько литров заправить?").toDoubleOrNull()
+                ?: return@addActionListener
             presenter.refuelAircraft(selected, amount)
         }
         add(refuelButton)
@@ -129,8 +137,7 @@ class AirlineView(
         infoButton.setBounds(20, 300, 200, 30)
         infoButton.addActionListener {
             val selected = list.selectedValue ?: return@addActionListener
-            val info = presenter.getAircraftInfo(selected)
-            JOptionPane.showMessageDialog(this, info, "Информация о самолете", JOptionPane.INFORMATION_MESSAGE)
+            presenter.getAircraftInfo(selected)
         }
         add(infoButton)
 
@@ -138,7 +145,6 @@ class AirlineView(
         avgFuelButton.setBounds(240, 300, 200, 30)
         avgFuelButton.addActionListener {
             val avg = presenter.calculateAverageFuel()
-            JOptionPane.showMessageDialog(this, "Средний расход топлива: $avg л/км", "Средний расход", JOptionPane.INFORMATION_MESSAGE)
         }
         add(avgFuelButton)
 
@@ -156,8 +162,7 @@ class AirlineView(
         searchButton.addActionListener {
             val searchQuery = searchField.text.trim()
             if (searchQuery.isNotEmpty()) {
-                val result = presenter.getAircraftInfo(searchQuery)
-                JOptionPane.showMessageDialog(this, result, "Результат поиска", JOptionPane.INFORMATION_MESSAGE)
+                presenter.getAircraftInfo(searchQuery)
             } else {
                 JOptionPane.showMessageDialog(this, "Введите название самолета", "Ошибка", JOptionPane.WARNING_MESSAGE)
             }
@@ -175,4 +180,10 @@ class AirlineView(
     fun updateFleetList(aircraft: Aircraft) {
         aircraftList.addElement(aircraft.model)
     }
+
+    fun updateFleetList(aircraft: List<Aircraft>) {
+        aircraftList.clear()
+        aircraft.forEach { aircraft -> aircraftList.addElement(aircraft.model) }
+    }
+
 }

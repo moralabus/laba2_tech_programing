@@ -1,36 +1,34 @@
 package org.example.model
 
-import org.springframework.data.annotation.TypeAlias
+import org.example.model.builder.impl.CargoPlaneBuilderImpl
+import org.example.model.builder.impl.PassengerAirplaneBuilderImpl
 import org.springframework.data.mongodb.core.mapping.Document
+import java.lang.Thread.sleep
 import java.time.LocalDate
 
-@Document("aircraft")
-@TypeAlias("cargo")
-class CargoPlane(
+@Document("aircraft") // храним в коллекции aircraft
+class CargoPlane( //Добавление самолетика грузового
     id:String? = null,
     model: String,
     capacity: Int,
     range: Double,
     fuelConsumption: Double,
     creationDate: LocalDate,
-    val cargoCapacity: Double,
 ) : Aircraft(id, model, capacity, range, fuelConsumption, creationDate) {
     private val engine = Engine("V8", 100);
 
-    fun loadCargo(weight: Double) {
-        if (weight > cargoCapacity) {
-            println("Невозможно загрузить $weight тонн груза. Максимальная вместимость: $cargoCapacity тонн.")
-        } else {
-            println("Загружено $weight тонн груза в $model.")
-        }
-    }
-
     override fun getAircraftInfo(): String {
-        return "${super.getAircraftInfo()}, Максимальная вместимость $cargoCapacity тонн"
+        return "${super.getAircraftInfo()}"
     }
 
 
     override fun fly() {
-        println("$model перевозит груз весом $cargoCapacity тонн на $range км.")
+        engine.start()
+        sleep(1000)
+        println("$model выполняет грузовой рейс на $range км.")
+    }
+
+    companion object{
+        fun builder():CargoPlaneBuilderImpl = CargoPlaneBuilderImpl();
     }
 }

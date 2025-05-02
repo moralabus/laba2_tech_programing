@@ -1,11 +1,11 @@
 package org.example.model
 
-class Engine(private val type: String, private val power: Int) {
+class Engine (private val type: String, private val power: Int) { //двигатель
 
 
     private var isRunning: Boolean = false
 
-    fun start() {
+    fun start() { // функция для запуска двигателя
         if (!isRunning) {
             isRunning = true
             println("Двигатель $type (мощность: $power HP) запущен.")
